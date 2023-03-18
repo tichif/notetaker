@@ -18,6 +18,7 @@ const Home: NextPage = () => {
       </Head>
       <main>
         <Header />
+        <Content />
       </main>
     </>
   );
@@ -25,26 +26,55 @@ const Home: NextPage = () => {
 
 export default Home;
 
-const AuthShowcase: React.FC = () => {
+const Content: React.FC = () => {
   const { data: sessionData } = useSession();
 
-  const { data: secretMessage } = api.example.getSecretMessage.useQuery(
-    undefined, // no input
-    { enabled: sessionData?.user !== undefined }
+  const { data: topics, refetch: refetchTopics } = api.topic.getAll.useQuery(
+    undefined,
+    {
+      enabled: sessionData?.user !== undefined,
+    }
   );
 
+  const createTopic = api.topic.create.useMutation({
+    onSuccess: () => {
+      void refetchTopics();
+    },
+  });
+
   return (
-    <div className="flex flex-col items-center justify-center gap-4">
-      <p className="text-center text-2xl text-white">
-        {sessionData && <span>Logged in as {sessionData.user?.name}</span>}
-        {secretMessage && <span> - {secretMessage}</span>}
-      </p>
-      <button
-        className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
-        onClick={sessionData ? () => void signOut() : () => void signIn()}
-      >
-        {sessionData ? "Sign out" : "Sign in"}
-      </button>
+    <div className="mx-5 mt-5 grid grid-cols-4 gap-2">
+      <div className="px-2">
+        <ul className="menu rounded-box w-56 bg-base-100 p-2">
+          {topics?.map((topic) => (
+            <li key={topic.id}>
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                }}
+              >
+                {topic.title}
+              </a>
+            </li>
+          ))}
+        </ul>
+        <div className="divider"></div>
+        <input
+          type="text"
+          placeholder="New Topic"
+          className="input-bordered input input-sm w-full"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              createTopic.mutate({
+                title: e.currentTarget.value,
+              });
+              e.currentTarget.value = "";
+            }
+          }}
+        />
+      </div>
+      <div className="col-span-3"></div>
     </div>
   );
 };
