@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { api, type RouterOutputs } from "~/utils/api";
 import Header from "~/components/Header";
+import NoteEditor from "~/components/NoteEditor";
 
 const Home: NextPage = () => {
   const hello = api.example.hello.useQuery({ text: "from tRPC" });
@@ -33,6 +34,7 @@ const Content: React.FC = () => {
 
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
 
+  // topics
   const { data: topics, refetch: refetchTopics } = api.topic.getAll.useQuery(
     undefined,
     {
@@ -46,6 +48,22 @@ const Content: React.FC = () => {
   const createTopic = api.topic.create.useMutation({
     onSuccess: () => {
       void refetchTopics();
+    },
+  });
+
+  // notes
+  const { data: notes, refetch: refetchNotes } = api.note.getAll.useQuery(
+    {
+      topicId: selectedTopic?.id ?? "",
+    },
+    {
+      enabled: sessionData?.user !== undefined && selectedTopic !== null,
+    }
+  );
+
+  const createNote = api.note.create.useMutation({
+    onSuccess: () => {
+      void refetchNotes();
     },
   });
 
@@ -82,7 +100,17 @@ const Content: React.FC = () => {
           }}
         />
       </div>
-      <div className="col-span-3"></div>
+      <div className="col-span-3">
+        <NoteEditor
+          onSave={({ title, content }) => {
+            createNote.mutate({
+              title,
+              content,
+              topicId: selectedTopic.id,
+            });
+          }}
+        />
+      </div>
     </div>
   );
 };
