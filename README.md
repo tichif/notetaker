@@ -1,4 +1,4 @@
-# Leaning T3 Stack 
+# Learning T3 Stack 
 
 This project allows authenticated users to create Topics and Notes with Markdown.
 This project is created with T3 stack:
